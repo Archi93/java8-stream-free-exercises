@@ -29,6 +29,8 @@ class WorkShop {
 
     // Predykat określający czy użytkownik jest kobietą
     private final Predicate<User> isWoman = user -> Sex.WOMAN.equals(user.getSex());
+    private User user;
+
 
     WorkShop() {
         final HoldingMockGenerator holdingMockGenerator = new HoldingMockGenerator();
@@ -619,11 +621,11 @@ class WorkShop {
         Map<String, List<String>> userPerCompanyAsString = new HashMap<>();
         for (Holding holding : holdings) {
             for (Company company : holding.getCompanies()) {
-                    List<String> userNames = new ArrayList<>();
-                    for(User user: company.getUsers()) {
-                        userNames.add(user.getFirstName() + " " + user.getLastName());
-                    }
-                    userPerCompanyAsString.put(company.getName(), userNames);
+                List<String> userNames = new ArrayList<>();
+                for (User user : company.getUsers()) {
+                    userNames.add(user.getFirstName() + " " + user.getLastName());
+                }
+                userPerCompanyAsString.put(company.getName(), userNames);
             }
         }
         return userPerCompanyAsString;
@@ -636,12 +638,12 @@ class WorkShop {
     Map<String, List<String>> getUserPerCompanyAsStringAsStream() {
         return getCompanyStream()
                 .collect(Collectors
-                                    .toMap(
-                                            Company::getName,
-                                            (Company company) -> company.getUsers()
-                                    .stream()
-                                    .map(user -> user.getFirstName()+ " " + user.getLastName())
-                                    .collect(Collectors.toList())));
+                        .toMap(
+                                Company::getName,
+                                (Company company) -> company.getUsers()
+                                        .stream()
+                                        .map(user -> user.getFirstName() + " " + user.getLastName())
+                                        .collect(Collectors.toList())));
     }
 
     /**
@@ -649,7 +651,19 @@ class WorkShop {
      * funkcji.
      */
     <T> Map<String, List<T>> getUserPerCompany(final Function<User, T> converter) {
-        return null;
+        Map<String, List<T>> userPerCompany = new HashMap<>();
+
+        for (Holding holding : holdings) {
+            for (Company company : holding.getCompanies()) {
+                List<T> employeeList = new ArrayList<T>();
+                for (User user : company.getUsers()) {
+                    employeeList.add(converter.apply(user));
+                    userPerCompany.put(company.getName(), employeeList);
+                }
+            }
+        }
+
+        return userPerCompany;
     }
 
     /**
@@ -657,7 +671,14 @@ class WorkShop {
      * Napisz to za pomocą strumieni.
      */
     <T> Map<String, List<T>> getUserPerCompanyAsStream(final Function<User, T> converter) {
-        return null;
+        return getCompanyStream()
+                .collect(Collectors
+                        .toMap(
+                                Company::getName,
+                                (Company company) -> company.getUsers()
+                                        .stream()
+                                        .map(user -> converter.apply(user))
+                                        .collect(Collectors.toList())));
     }
 
     /**
